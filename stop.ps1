@@ -26,7 +26,7 @@ if (-not $proc) {
 
 $cmdLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $processId" -ErrorAction SilentlyContinue).CommandLine
 if ($cmdLine -and $cmdLine -notmatch "verselink\.py") {
-    Write-Host "Refusing to stop pid $processId: it is not verselink.py." -ForegroundColor Red
+    Write-Host "Refusing to stop pid ${processId}: it is not verselink.py." -ForegroundColor Red
     exit 1
 }
 

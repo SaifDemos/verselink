@@ -84,7 +84,10 @@ jobs:
                   [ref]$parseErrors
               )
               if ($parseErrors) {
-                  $parseErrors | ForEach-Object { Write-Host $_.Message }
+                  $parseErrors | ForEach-Object {
+                      Write-Host ("{0}:{1}:{2}: {3}" -f $path,
+                          $_.Extent.StartLineNumber, $_.Extent.StartColumnNumber, $_.Message)
+                  }
                   exit 1
               }
           }
