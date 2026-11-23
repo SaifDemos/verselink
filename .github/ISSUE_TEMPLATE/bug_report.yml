@@ -1,0 +1,64 @@
+name: Bug report
+description: Report a reproducible problem with VerseLink.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Search existing issues first.
+        For security vulnerabilities, use private reporting instead of this form.
+        Redact private paths, addresses, tokens, and personal media metadata.
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Linux
+        - Windows 10 / 11
+        - Other (not currently supported)
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS version, Python version, browser/version, and VerseLink commit if known.
+      placeholder: Ubuntu 24.04, Python 3.12, Firefox, latest main
+    validations:
+      required: true
+  - type: input
+    id: player
+    attributes:
+      label: Media player
+      description: App/version and selected source, if relevant.
+      placeholder: Spotify desktop, Automatic source
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start VerseLink with ...
+        2. Open ...
+        3. Select ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or browser-console errors
+      description: Optional. Review .run/ logs before sharing; remove private data.
+      render: text

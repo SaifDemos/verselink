@@ -1,0 +1,90 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  syntax:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+        python-version: ["3.8", "3.14"]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up Node.js for JavaScript syntax checks
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Check Python syntax
+        run: python -m py_compile verselink.py
+
+      - name: Check embedded JavaScript syntax
+        run: |
+          python - <<'PY'
+          import ast
+          from pathlib import Path
+          import subprocess
+          import tempfile
+
+          tree = ast.parse(Path("verselink.py").read_text(encoding="utf-8"))
+          page = next(ast.literal_eval(node.value) for node in tree.body
+                      if isinstance(node, ast.Assign)
+                      and any(isinstance(target, ast.Name) and target.id == "PAGE"
+                              for target in node.targets))
+          script = page.split("<script>", 1)[1].split("</script>", 1)[0]
+          with tempfile.TemporaryDirectory() as directory:
+              path = Path(directory) / "page.js"
+              path.write_text(script, encoding="utf-8")
+              subprocess.run(["node", "--check", str(path)], check=True)
+          PY
+
+      - name: Check Linux launcher syntax
+        if: runner.os == 'Linux'
+        run: |
+          bash -n start.sh
+          bash -n stop.sh
+
+      - name: Check PowerShell 5.1 syntax
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          foreach ($path in @("start.ps1", "stop.ps1", "win-gsmtc.ps1")) {
+              $tokens = $null
+              $parseErrors = $null
+              [void][System.Management.Automation.Language.Parser]::ParseFile(
+                  (Resolve-Path -LiteralPath $path).Path,
+                  [ref]$tokens,
+                  [ref]$parseErrors
+              )
+              if ($parseErrors) {
+                  $parseErrors | ForEach-Object { Write-Host $_.Message }
+                  exit 1
+              }
+          }
