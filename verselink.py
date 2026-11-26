@@ -582,6 +582,9 @@ body.idle{cursor:none}
   background-image:var(--art,none);
   filter:blur(62px) brightness(.4) saturate(1.35);transform:scale(1.03);
   z-index:0;pointer-events:none;transition:filter .5s,transform .5s}
+#bgPrev{position:fixed;inset:-12%;background:#0b0b10 center/cover no-repeat;
+  filter:blur(62px) brightness(.4) saturate(1.35);transform:scale(1.03);
+  z-index:1;pointer-events:none;opacity:0;transition:opacity 2.4s ease-in-out}
 /* Independently flowing patches of the blurred artwork, not audio bars. */
 #liquid{position:fixed;inset:0;z-index:1;overflow:hidden;pointer-events:none;
   contain:layout paint;isolation:isolate;opacity:0;visibility:hidden;
@@ -642,8 +645,10 @@ body[data-bg="dark"] #bg{background-image:none;filter:none;transform:none;backgr
 
 /* stage ------------------------------------------------------------------ */
 #stage{position:relative;z-index:5;display:flex;align-items:center;
-  gap:clamp(18px,3vw,56px);height:100vh;height:100dvh;padding:0 clamp(18px,4vw,64px)}
-#lyricsWrap{flex:1 1 auto;min-width:0;height:100%;display:flex}
+  gap:clamp(18px,3vw,56px);height:100vh;height:100dvh;padding:0 clamp(18px,4vw,64px);
+  transition:gap .45s ease,padding .45s ease}
+#lyricsWrap{flex:1 1 auto;min-width:0;height:100%;display:flex;
+  transition:opacity .45s ease,transform .45s ease,max-width .45s ease,flex-basis .45s ease}
 #lyrics{position:relative;flex:1;min-width:0;overflow:hidden;
   -webkit-mask-image:linear-gradient(transparent,#000 15%,#000 80%,transparent);
   mask-image:linear-gradient(transparent,#000 15%,#000 80%,transparent)}
@@ -657,21 +662,40 @@ body[data-bg="dark"] #bg{background-image:none;filter:none;transform:none;backgr
              transform var(--lt) cubic-bezier(.2,.8,.2,1)}
 .line.active{opacity:1;transform:scale(1);filter:drop-shadow(0 0 18px var(--glow))}
 .line.gap{letter-spacing:.32em}
+.censored{display:inline-block;vertical-align:baseline;padding:0 .06em;border-radius:.2em;
+  background:rgba(255,255,255,.08);filter:blur(.32em);opacity:.65;
+  user-select:none;-webkit-user-select:none;cursor:pointer;
+  transition:filter .25s ease,opacity .25s ease,background-color .25s ease}
+.censored:hover{background:rgba(255,255,255,.14)}
+.censored.revealed{filter:none;opacity:1;background:rgba(255,255,255,.06)}
 body[data-align="center"] #track{text-align:center}
 body[data-align="center"] .line{transform-origin:center center}
 .msg{position:absolute;top:42%;left:0;right:0;font-size:clamp(19px,2.1vw,32px);
   font-weight:700;opacity:.55}
 
 /* side card -------------------------------------------------------------- */
-#side{flex:0 0 auto;display:flex;align-items:center;justify-content:center;max-width:46vw}
-.card{width:calc(min(30vw,52vh)*var(--cs));max-width:100%}
-#art{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:16px;
-  background:#1b1b22;box-shadow:0 30px 80px rgba(0,0,0,.55)}
-#art.none{visibility:hidden}
+#side{flex:0 0 auto;display:flex;align-items:center;justify-content:center;max-width:46vw;
+  transition:opacity .45s ease,transform .45s ease,max-width .45s ease,flex .45s ease}
+.card{width:calc(min(30vw,52vh)*var(--cs));max-width:100%;
+  transition:width .45s ease,transform .45s ease}
+#artWrap{position:relative;display:block;width:100%;aspect-ratio:1;border-radius:16px;
+  overflow:hidden;background:#1b1b22;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+#artWrap.none{visibility:hidden}
+#art,#artOld{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform 1.2s cubic-bezier(.22,.9,.2,1),opacity 1.2s ease}
+#artOld{opacity:0;pointer-events:none}
 #meta{margin-top:18px;text-align:center;max-width:100%}
 #title{font-size:calc(var(--ls)*clamp(18px,1.9vw,30px));font-weight:800;line-height:1.2;
   overflow-wrap:break-word}
 #artist{margin-top:6px;font-size:clamp(13px,1.2vw,18px);opacity:.7}
+.noLyricsMsg{margin-top:0;height:0;overflow:hidden;text-align:center;font-size:clamp(12px,1vw,15px);
+  font-weight:600;letter-spacing:.01em;color:rgba(255,255,255,.5);
+  opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease,margin-top .35s ease,height .35s ease;
+  pointer-events:none}
+.noLyricsMsg.show{height:auto;margin-top:14px;overflow:visible}
+body.ui .noLyricsMsg.show{opacity:.72;transform:none}
+#coverMeta .noLyricsMsg{text-align:left;margin-top:0}
+#coverMeta .noLyricsMsg.show{margin-top:10px}
 body[data-meta="0"] #meta,body[data-meta="0"] #coverMeta{display:none}
 
 /* full-cover layout ------------------------------------------------------ */
@@ -679,12 +703,16 @@ body[data-meta="0"] #meta,body[data-meta="0"] #coverMeta{display:none}
   z-index:6;display:none;max-width:60vw;text-shadow:0 2px 24px rgba(0,0,0,.75)}
 #ctitle{font-size:clamp(18px,2.1vw,32px);font-weight:800;line-height:1.15}
 #cartist{opacity:.72;font-size:clamp(12px,1.2vw,17px);margin-top:4px}
-body[data-layout="cover"] #bg{inset:0;filter:brightness(.6) saturate(1.05) blur(1px);
+body[data-layout="cover"] #bg,
+body[data-layout="cover"] #bgPrev{inset:0;filter:brightness(.6) saturate(1.05) blur(1px);
   transform:scale(1.05)}
-body[data-layout="cover"][data-bg="liquid"] #bg{
+body[data-layout="cover"][data-bg="liquid"] #bg,
+body[data-layout="cover"][data-bg="liquid"] #bgPrev{
   inset:-12%;filter:blur(62px) brightness(.4) saturate(1.35);transform:scale(1.03)}
 body[data-layout="cover"][data-bg="colors"] #bg,
 body[data-layout="cover"][data-bg="dark"] #bg{filter:none;transform:none}
+body[data-layout="cover"][data-bg="colors"] #bgPrev,
+body[data-layout="cover"][data-bg="dark"] #bgPrev{filter:none;transform:none}
 body[data-layout="cover"] #shade{
   background:linear-gradient(180deg,rgba(0,0,0,.58),rgba(0,0,0,.06) 40%,rgba(0,0,0,.9))}
 body[data-layout="cover"] #stage{display:block;padding:0}
@@ -704,6 +732,20 @@ body[data-layout="stack"] #stage{flex-direction:column;justify-content:center;
 body[data-layout="stack"] #side{order:-1}
 body[data-layout="stack"] #lyricsWrap{height:auto;flex:1 1 auto;width:100%;min-height:0}
 body[data-layout="stack"] .card{width:calc(min(46vw,24vh)*var(--cs))}
+
+/* cover focus: lyrics off or no lyrics ---------------------------------- */
+body[data-cover-focus="1"] #stage{gap:0;justify-content:center}
+body[data-cover-focus="1"] #lyricsWrap{
+  opacity:0;pointer-events:none;max-width:0 !important;flex-basis:0 !important;
+  min-width:0;padding:0;overflow:hidden;transform:scale(.98)}
+body[data-cover-focus="1"] #side{flex:1 1 auto;max-width:none;display:flex}
+body[data-cover-focus="1"] .card{width:calc(min(34vw,58vh)*var(--cs))}
+body[data-cover-focus="1"][data-layout="stack"] #stage{gap:0;padding-top:8vh;padding-bottom:14vh}
+body[data-cover-focus="1"][data-layout="stack"] #lyricsWrap{height:0;flex:0 0 0 !important;min-height:0}
+body[data-cover-focus="1"][data-layout="stack"] .card{width:calc(min(42vw,52vh)*var(--cs))}
+body[data-cover-focus="1"][data-layout="cover"] #lyricsWrap{opacity:0;pointer-events:none;max-width:none !important;flex-basis:auto !important}
+body[data-cover-focus="1"][data-layout="cover"] #side{display:none}
+body[data-cover-focus="1"][data-layout="lyrics"] #side{display:flex}
 
 /* animation levels ------------------------------------------------------- */
 body[data-anim="subtle"]{--lt:.4s;--st:.55s}
@@ -834,6 +876,9 @@ input[type=range]{width:100%;accent-color:#fff;height:28px;cursor:pointer}
   .iconbtn{width:38px;height:38px;min-width:38px}
   #play{width:44px;height:44px}
   .seek span{min-width:28px;font-size:11.5px}
+  body[data-cover-focus="1"][data-layout="lr"] #lyricsWrap,
+  body[data-cover-focus="1"][data-layout="rl"] #lyricsWrap{max-width:100% !important;flex-basis:0 !important;height:0;flex:0 0 0 !important;min-height:0}
+  body[data-cover-focus="1"] .card{width:calc(min(52vw,34vh)*var(--cs))}
 }
 @media (max-width:420px){
   .seek span{display:none}
@@ -841,7 +886,7 @@ input[type=range]{width:100%;accent-color:#fff;height:28px;cursor:pointer}
 </style>
 </head>
 <body data-layout="lr" data-bg="liquid" data-bg-motion="1" data-anim="normal" data-align="left"
-      data-meta="1" data-clock="0" data-bar="1" data-playing="0">
+      data-meta="1" data-clock="0" data-bar="1" data-playing="0" data-lyrics="1" data-cover-focus="0">
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></symbol>
@@ -859,16 +904,18 @@ input[type=range]{width:100%;accent-color:#fff;height:28px;cursor:pointer}
   <div class="liquid-layer liquid-b"></div>
   <div class="liquid-layer liquid-c"></div>
 </div>
+<div id="bgPrev" aria-hidden="true"></div>
 <div id="shade"></div>
 <div id="clock">--:--</div>
 
 <div id="stage">
   <div id="lyricsWrap"><div id="lyrics"><div id="track"></div></div></div>
   <aside id="side"><div class="card">
-    <img id="art" class="none" alt="">
+    <div id="artWrap" class="none"><img id="art" alt=""><img id="artOld" alt="" aria-hidden="true"></div>
     <div id="meta"><div id="title">Nothing playing</div><div id="artist"></div></div>
+    <div id="noLyricsMsg" class="noLyricsMsg">No lyrics found</div>
   </div></aside>
-  <div id="coverMeta"><div id="ctitle"></div><div id="cartist"></div></div>
+  <div id="coverMeta"><div id="ctitle"></div><div id="cartist"></div><div id="coverNoLyrics" class="noLyricsMsg">No lyrics found</div></div>
 </div>
 
 <div id="controls">
@@ -950,9 +997,11 @@ input[type=range]{width:100%;accent-color:#fff;height:28px;cursor:pointer}
     </div>
 
     <div class="grp"><label>Display</label>
+      <div class="row"><span>Lyrics</span><button class="switch" type="button" data-key="lyrics" aria-label="Show lyrics"></button></div>
       <div class="row"><span>Song title &amp; artist</span><button class="switch" type="button" data-key="meta" aria-label="Show song info"></button></div>
       <div class="row"><span>Seek bar</span><button class="switch" type="button" data-key="bar" aria-label="Show seek bar"></button></div>
       <div class="row"><span>Clock</span><button class="switch" type="button" data-key="clock" aria-label="Show clock"></button></div>
+      <div class="row"><span>Blur bad words</span><button class="switch" type="button" data-key="censor" aria-label="Blur bad words"></button></div>
     </div>
 
     <div class="grp">
@@ -968,23 +1017,24 @@ input[type=range]{width:100%;accent-color:#fff;height:28px;cursor:pointer}
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const body = document.body;
-const LS_KEY = 'verselink.settings.v2';
-const LEGACY_LS_KEYS = ['verselink.settings.v1', 'synclyrics.settings.v2'];
+const LS_KEY = 'verselink.settings.v4';
+const LEGACY_LS_KEYS = ['verselink.settings.v3', 'verselink.settings.v2', 'verselink.settings.v1', 'synclyrics.settings.v2'];
 const DEFAULTS = {layout:'lr', align:'left', ls:1, cs:1, anim:'normal',
-                  bg:'liquid', meta:true, bar:true, clock:false};
+                  bg:'liquid', meta:true, bar:true, clock:false, censor:false, lyrics:true};
 let S = Object.assign({}, DEFAULTS);
 try {
-  let raw = localStorage.getItem(LS_KEY), migrated = false;
+  let raw = localStorage.getItem(LS_KEY), migrated = false, migratedFrom = '';
   if (!raw) {
     for (const key of LEGACY_LS_KEYS) {
       raw = localStorage.getItem(key);
-      if (raw) { migrated = true; break; }
+      if (raw) { migrated = true; migratedFrom = key; break; }
     }
   }
   const saved = JSON.parse(raw || '{}');
   S = Object.assign(S, saved);
   // Replace the old default and removed mode without resetting other preferences.
-  if (migrated && (saved.bg === 'blur' || saved.bg === 'viz')) S.bg = 'liquid';
+  if (migrated && saved.bg === 'viz') S.bg = 'liquid';
+  if (migrated && migratedFrom !== 'verselink.settings.v2' && saved.bg === 'blur') S.bg = 'liquid';
   if (!['liquid', 'blur', 'colors', 'dark'].includes(S.bg)) S.bg = 'liquid';
   if (migrated) localStorage.setItem(LS_KEY, JSON.stringify(S));
 } catch (e) {}
@@ -992,6 +1042,8 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 let st = {status:'none', dur:0, pos:0}, syncAt = performance.now();
 let lines = [], curId = null, active = -2;
+let noLyrics = false;
+let trackDir = 0;
 let dragging = false, dragT = 0;
 let uiWasVisible = false;
 let lastSwipeAt = 0;
@@ -1016,6 +1068,8 @@ function applySettings() {
   body.dataset.meta = S.meta ? '1' : '0';
   body.dataset.bar = S.bar ? '1' : '0';
   body.dataset.clock = S.clock ? '1' : '0';
+  body.dataset.lyrics = S.lyrics ? '1' : '0';
+  body.dataset.coverFocus = (!S.lyrics || noLyrics) ? '1' : '0';
   const root = document.documentElement.style;
   root.setProperty('--ls', S.ls);
   root.setProperty('--cs', S.cs);
@@ -1029,6 +1083,7 @@ function applySettings() {
     if (r.dataset.key in S) r.value = S[r.dataset.key];
   });
   requestAnimationFrame(layout);
+  setTimeout(layout, 500);
   syncBackground();
 }
 
@@ -1098,6 +1153,7 @@ $('#source').addEventListener('change', async () => {
       curId = null;
       lines = [];
       active = -2;
+      setNoLyrics(false);
       showMsg(pid ? 'Switching audio source\u2026' : 'Using the first playing app\u2026');
     }
   } catch (e) {}
@@ -1130,6 +1186,48 @@ function closeSettings() {
 }
 
 /* ---------------------------------------------------------------- lyrics -- */
+const BAD_WORDS = [
+  'asshole','arsehole','bastard','bitch','bollocks','bullshit','cock','crap',
+  'cunt','damn','dick','dickhead','fag','faggot','fuck','fucked','fucker',
+  'fucking','goddamn','motherfucker','nigga','nigger','piss','prick','pussy',
+  'shit','shitty','slut','twat','wanker','whore'
+];
+const BAD_RE = new RegExp('\\b(' + BAD_WORDS.slice().sort((a, b) => b.length - a.length).join('|') + ')\\b', 'gi');
+
+function setCensoredText(el, text) {
+  BAD_RE.lastIndex = 0;
+  const parts = text.split(BAD_RE);
+  if (parts.length === 1) { el.textContent = text; return; }
+  el.textContent = '';
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (!part) continue;
+    if (i % 2 === 1) {
+      const s = document.createElement('span');
+      s.className = 'censored';
+      s.textContent = part;
+      s.title = 'Click to reveal';
+      s.addEventListener('click', e => {
+        e.stopPropagation();
+        s.classList.toggle('revealed');
+      });
+      el.appendChild(s);
+    } else {
+      el.appendChild(document.createTextNode(part));
+    }
+  }
+}
+
+function setNoLyrics(on, msg) {
+  noLyrics = !!on;
+  $$('.noLyricsMsg').forEach(el => {
+    el.textContent = msg || 'No lyrics found';
+    el.classList.toggle('show', noLyrics);
+  });
+  body.dataset.coverFocus = (!S.lyrics || noLyrics) ? '1' : '0';
+  if (!body.dataset.coverFocus || body.dataset.coverFocus === '0') setTimeout(layout, 500);
+}
+
 function showMsg(text) {
   lines = []; active = -2;
   const tr = $('#track');
@@ -1148,7 +1246,9 @@ function buildLines() {
   lines.forEach(l => {
     const d = document.createElement('div');
     d.className = 'line' + (l[1] ? '' : ' gap');
-    d.textContent = l[1] || '\u266A';
+    const text = l[1] || '\u266A';
+    if (S.censor && l[1]) setCensoredText(d, text);
+    else d.textContent = text;
     d.addEventListener('click', () => {
       // While the controls are hidden, the first click/tap only brings them back.
       if (!uiWasVisible) { showUI(); return; }
@@ -1230,7 +1330,21 @@ function prepareLiquidArt(img) {
   } catch (e) {}
 }
 
+function snapshotBg() {
+  const prev = $('#bgPrev'), bg = $('#bg');
+  const cs = getComputedStyle(bg);
+  prev.style.backgroundImage = cs.backgroundImage;
+  prev.style.backgroundColor = cs.backgroundColor;
+  prev.style.transition = 'none';
+  prev.style.opacity = '1';
+  requestAnimationFrame(() => {
+    prev.style.transition = 'opacity 2.4s ease-in-out';
+    prev.style.opacity = '0';
+  });
+}
+
 function clearArtBackground() {
+  snapshotBg();
   const root = document.documentElement.style;
   root.setProperty('--art', 'none');
   root.setProperty('--liquid-art', 'none');
@@ -1238,23 +1352,60 @@ function clearArtBackground() {
 }
 
 function setArt(src) {
-  const img = $('#art'), root = document.documentElement.style;
+  const img = $('#art'), old = $('#artOld'), wrap = $('#artWrap');
+  const root = document.documentElement.style;
+  const dir = trackDir;
+  trackDir = 0;
   if (src) {
-    img.classList.remove('none');
+    wrap.classList.remove('none');
     if (img.getAttribute('src') !== src) {
+      snapshotBg();
+      const slide = dir !== 0 && !!img.getAttribute('src');
+      if (slide) {
+        old.src = img.getAttribute('src');
+        old.style.transition = 'none';
+        old.style.transform = 'translateX(0)';
+        old.style.opacity = '1';
+        img.style.transition = 'none';
+        img.style.transform = 'translateX(' + (dir * 100) + '%)';
+        img.style.opacity = '0';
+        void img.offsetHeight;
+        img.style.transition = 'transform 1.2s cubic-bezier(.22,.9,.2,1),opacity 1.2s ease';
+        old.style.transition = 'transform 1.2s cubic-bezier(.22,.9,.2,1),opacity 1.2s ease';
+      } else {
+        img.style.transition = '';
+        img.style.transform = '';
+        img.style.opacity = '';
+        old.style.transition = '';
+        old.style.transform = '';
+        old.style.opacity = '0';
+        old.removeAttribute('src');
+      }
+      let slid = false;
+      const doSlide = () => {
+        if (slid || !slide) return;
+        slid = true;
+        img.style.transform = 'translateX(0)';
+        img.style.opacity = '1';
+        old.style.transform = 'translateX(' + (-dir * 100) + '%)';
+        old.style.opacity = '0';
+        setTimeout(() => { old.removeAttribute('src'); old.style.transition='none'; old.style.transform=''; old.style.opacity='0'; }, 1300);
+      };
       root.setProperty('--art', 'url("' + src + '")');
       root.setProperty('--liquid-art', 'url("' + src + '")');
-      img.onload = () => prepareLiquidArt(img);
-      img.onerror = () => {
-        img.classList.add('none');
-        clearArtBackground();
-      };
+      img.onload = () => { prepareLiquidArt(img); doSlide(); };
+      img.onerror = () => { wrap.classList.add('none'); clearArtBackground(); };
       img.src = src;
+      if (img.complete && img.naturalWidth) { prepareLiquidArt(img); requestAnimationFrame(doSlide); }
+    } else if (img.complete && img.naturalWidth) {
+      prepareLiquidArt(img);
     }
-    if (img.complete && img.naturalWidth) prepareLiquidArt(img);
   } else {
-    img.classList.add('none');
+    wrap.classList.add('none');
     img.removeAttribute('src');
+    img.style.transition = ''; img.style.transform = ''; img.style.opacity = '';
+    old.removeAttribute('src');
+    old.style.transition = ''; old.style.transform = ''; old.style.opacity = '0';
     img.onload = img.onerror = null;
     clearArtBackground();
   }
@@ -1275,18 +1426,28 @@ async function onTrack(s) {
   $('#cartist').textContent = s.artist || '';
   document.title = (s.title || 'VerseLink') + (s.artist ? ' \u2014 ' + s.artist : '');
   setArt(s.art);
+  setNoLyrics(false);
   showMsg('Loading lyrics\u2026');
   try {
     const j = await (await fetch('/lyrics', {cache:'no-store'})).json();
     if (j.id !== curId) return;
     if (!j.lines || !j.lines.length) {
-      showMsg('No synced lyrics for this song');
+      setNoLyrics(true, 'No lyrics found');
+      lines = []; active = -2;
+      const tr = $('#track');
+      tr.style.transform = 'translateY(0)';
+      tr.innerHTML = '';
       return;
     }
+    setNoLyrics(false);
     lines = j.lines;
     buildLines();
   } catch (e) {
-    showMsg('Could not load lyrics');
+    setNoLyrics(true, 'Could not load lyrics');
+    lines = []; active = -2;
+    const tr = $('#track');
+    tr.style.transform = 'translateY(0)';
+    tr.innerHTML = '';
   }
 }
 
@@ -1301,6 +1462,7 @@ async function poll() {
       if (curId !== 'none') {
         curId = 'none';
         setArt('');
+        setNoLyrics(false);
         showMsg('Nothing playing');
         $('#title').textContent = 'Nothing playing';
         $('#artist').textContent = '';
@@ -1309,6 +1471,7 @@ async function poll() {
         document.title = 'VerseLink';
       }
     } else if (s.id !== curId) {
+      if (trackDir === 0 && curId && curId !== 'none') trackDir = 1;
       curId = s.id;
       onTrack(s);
     }
@@ -1382,8 +1545,8 @@ $('#play').onclick = () => {
   body.dataset.playing = wasPlaying ? '0' : '1';
   showUI();
 };
-$('#prev').onclick = () => { post('/cmd?c=previous'); showUI(); };
-$('#next').onclick = () => { post('/cmd?c=next'); showUI(); };
+$('#prev').onclick = () => { trackDir = -1; post('/cmd?c=previous'); showUI(); };
+$('#next').onclick = () => { trackDir = 1; post('/cmd?c=next'); showUI(); };
 
 function toggleFs() {
   if (document.fullscreenElement) {
@@ -1415,8 +1578,8 @@ addEventListener('keydown', e => {
   const k = e.key;
   if (k === 'f' || k === 'F') toggleFs();
   else if (k === ' ') { e.preventDefault(); $('#play').click(); }
-  else if (k === 'ArrowRight') post('/cmd?c=next');
-  else if (k === 'ArrowLeft') post('/cmd?c=previous');
+  else if (k === 'ArrowRight') { trackDir = 1; post('/cmd?c=next'); }
+  else if (k === 'ArrowLeft') { trackDir = -1; post('/cmd?c=previous'); }
   else if (k === 's' || k === 'S') {
     body.classList.contains('settings') ? closeSettings() : openSettings();
   } else if (k === 'Escape') closeSettings();
@@ -1434,6 +1597,7 @@ $$('.switch').forEach(sw => sw.addEventListener('click', () => {
   S[sw.dataset.key] = !S[sw.dataset.key];
   applySettings();
   saveSettings();
+  if (sw.dataset.key === 'censor' && lines.length) buildLines();
 }));
 $$('input[type=range]').forEach(r => r.addEventListener('input', () => {
   S[r.dataset.key] = parseFloat(r.value);
@@ -1452,6 +1616,7 @@ $('#reset').onclick = () => {
   S = Object.assign({}, DEFAULTS);
   applySettings();
   saveSettings();
+  if (lines.length) buildLines();
 };
 
 /* ------------------------------------------------------------- gestures -- */
@@ -1489,6 +1654,7 @@ function finishSwipe(e, cancelled) {
   const flick = Math.abs(dx) >= 34 && dt < 420;
   if ((!far && !flick) || Math.abs(dx) < Math.abs(dy) * 1.4) return;
   lastSwipeAt = performance.now();
+  trackDir = dx > 0 ? 1 : -1;
   post(dx > 0 ? '/cmd?c=next' : '/cmd?c=previous');
   showUI();
 }
@@ -1509,6 +1675,7 @@ tickClock();
 
 /* ------------------------------------------------------------------ init -- */
 applySettings();
+setNoLyrics(false);
 showMsg('Nothing playing');
 poll();
 requestAnimationFrame(frame);
